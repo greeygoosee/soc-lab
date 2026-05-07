@@ -8,12 +8,13 @@ Projekt domowego laboratorium bezpieczeństwa opartego na wirtualizacji **Proxmo
 - **Node:** `my-lab`
 
 ## 📦 Inwentarz Usług (LXC/VM)
-| ID  | Nazwa Usługi | Rola | Status |
-| :--- | :--- | :--- | :--- |
-| 100 | AdGuard Home | DNS Sinkhole & Security | ✅ Running |
-| 101 | Nginx Proxy Manager | Reverse Proxy & SSL | ✅ Running |
-| 102 | Wazuh Manager | SIEM / XDR | 🕒 Planowane |
-| 103 | TheHive | Incident Response Platform | 🕒 Planowane |
+
+| ID  | Usługa              | Rola                        | Status      | Adresacja (Internal) |
+| :-- | :------------------ | :-------------------------- | :---------- | :------------------- |
+| 100 | DNS Security        | DNS Sinkhole (AdGuard)      | ✅ Active   | 192.168.x.x          |
+| 101 | Reverse Proxy       | Ingress Control (NPM)       | ✅ Active   | 192.168.x.x          |
+| 102 | SIEM/XDR            | Threat Detection (Wazuh)    | ✅ Active   | 192.168.x.x          |
+| 103 | Incident Response   | Case Management (TheHive)   | 🕒 Planned  | -                    |
 
 ## 🛠️ Stack Technologiczny
 - **SIEM:** [Wazuh](https://wazuh.com) - Detekcja intruzów i log management.
@@ -22,8 +23,15 @@ Projekt domowego laboratorium bezpieczeństwa opartego na wirtualizacji **Proxmo
 - **Ingress:** [Nginx Proxy Manager](https://nginxproxymanager.com) - Bezpieczne wystawianie usług.
 
 ## 🚀 Plan Rozwoju
-- [x] Konfiguracja Proxmox VE.
-- [x] Wdrożenie DNS Security (AdGuard).
-- [ ] Instalacja Wazuh Manager (Master Node).
-- [ ] Integracja TheHive z Wazuh przez Shuffle/n8n.
-- [ ] Wdrożenie agentów na stacjach roboczych.
+- [x] Konfiguracja Proxmox VE 9.x.
+- [x] Wdrożenie DNS Security.
+- [x] Instalacja Wazuh Manager w architekturze kontenerowej (Docker).
+- [x] Konfiguracja automatyzacji startu usług (Systemd Unit Files).
+- [x] Wdrożenie pierwszego agenta na systemie Windows (Endpoint Monitoring).
+- [ ] Implementacja monitorowania integralności plików (FIM).
+- [ ] Integracja TheHive z Wazuh (SOAR workflow).
+
+🛡️ Capabilities:
+- **Endpoint Monitoring:** Zbieranie logów z systemów Windows przez agentów Wazuh.
+- **Persistence:** Automatyczne wznawianie usług po restarcie hosta (Docker + Systemd).
+- **Network Privacy:** Izolacja usług monitorujących od głównego segmentu sieci.
