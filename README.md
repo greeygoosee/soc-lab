@@ -34,3 +34,14 @@ Projekt laboratorium bezpieczeństwa opartego na wirtualizacji **Proxmox VE**. C
 - **Endpoint Monitoring:** Zbieranie logów z systemów Windows przez agentów Wazuh.
 - **Persistence:** Automatyczne wznawianie usług po restarcie hosta (Docker + Systemd).
 - **Network Privacy:** Izolacja usług monitorujących od głównego segmentu sieci.
+
+🧠 Key Learnings & Challenges Overcome
+Podczas budowy laboratorium napotkałem kilka krytycznych wyzwań, których rozwiązanie pozwoliło mi na głębsze zrozumienie architektury sieciowej i bezpieczeństwa:
+
+Network Infrastructure Shift: Pierwotna konfiguracja opierała się na podwójnym NAT (router dostawcy + własny router). Wyzwaniem była poprawna adresacja maszyn wirtualnych. Problem rozwiązany poprzez przełączenie routera brzegowego w Bridge Mode i rekonfigurację podsieci na 192.168.88.x, co umożliwiło uzyskanie pełnej kontroli nad ruchem i statyczną adresacją usług.
+
+Wazuh Credentials & Docker Persistence: Napotkałem trudności z synchronizacją haseł między indexerem a dashboardem po zmianie adresacji IP. Rozwiązaniem było wdrożenie plików .env oraz ręczna modyfikacja docker-compose.yml, co wymusiło poprawne wczytanie poświadczeń przy jednoczesnym zachowaniu trwałości wolumenów (Docker Volumes).
+
+Service Reliability (Systemd Integration): Aby zapewnić wysoką dostępność (High Availability) usług SOC po restarcie fizycznego hosta, opracowałem i wdrożyłem własne jednostki systemd (Unit Files). Dzięki temu stack kontenerowy startuje automatycznie w odpowiedniej kolejności, uwzględniając zależności sieciowe.
+
+Endpoint Security Enforcement: Pierwsze próby wdrożenia agenta kończyły się błędami uprawnień (Access Denied). Nauczką była konieczność egzekwowania pełnych uprawnień administracyjnych w PowerShell oraz weryfikacja polityk zapory systemowej pod kątem komunikacji z Managerem.
