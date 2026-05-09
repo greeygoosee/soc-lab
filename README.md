@@ -1,81 +1,57 @@
-# 🛡️ Proxmox Home SOC Lab
+# SOC Automation Lab: Wazuh EDR & Active Response 🛡️
 
-Projekt laboratorium bezpieczeństwa opartego na wirtualizacji **Proxmox VE**. Celem tego laba jest monitorowanie zagrożeń, analiza incydentów oraz automatyzacja odpowiedzi (SOAR).
+Projekt domowego laboratorium SOC (Security Operations Center) opartego na stosie Wazuh. Środowisko demonstruje pełny cykl życia incydentu: od monitorowania i wykrywania podatności, po automatyczną reakcję na niebezpieczne zdarzenia.
 
 ## 🏗️ Architektura Systemu
-- **Hypervisor:** Proxmox VE 9.x
-- **Sieć:** Izolowane segmenty sieciowe dla zarządzania i monitorowania.
-- **Node:** `my-lab`
+- **Manager:** Wazuh (wdrożony w kontenerach Docker)
+- **Endpointy:** Agenty Wazuh zainstalowane na systemach Windows (LaptopDellM, WindowsMarek)
+- **Główne moduły:** FIM (File Integrity Monitoring), Vulnerability Detector, Active Response
 
-## 📦 Inwentarz Usług (LXC/VM)
-| ID  | Usługa              | Rola                        | Status      |
-| :-- | :------------------ | :-------------------------- | :---------- |
-| 100 | DNS Security        | DNS Sinkhole (AdGuard)      | ✅ Active   |
-| 101 | Reverse Proxy       | Ingress Control (NPM)       | ✅ Active   |
-| 102 | SIEM/XDR            | Threat Detection (Wazuh)    | ✅ Active   |
-| 103 | Incident Response   | Case Management (TheHive)   | 🕒 Planned  |
+---
 
-## 🛠️ Stack Technologiczny
-- **SIEM:** [Wazuh](https://www.google.com/search?q=wazuh+siem+xdr+features) - Detekcja intruzów i log management.
-- **Persistence:** Systemd Unit Files dla automatyzacji startu kontenerów Docker.
-- **Network Security:** AdGuard Home - Blokowanie złośliwych domen i telemetrii.
-- **Ingress:** Nginx Proxy Manager - Bezpieczne wystawianie usług i zarządzanie SSL.
+## 🔬 Etap 1: Monitorowanie Integralności Plików (FIM) & Whodata
+Skonfigurowano zaawansowany moduł FIM do monitorowania krytycznych katalogów w czasie rzeczywistym.
 
-## 🚀 Plan Rozwoju
-- [x] Konfiguracja środowiska wirtualizacji.
-- [x] Wdrożenie DNS Security.
-- [x] Instalacja Wazuh Manager (Docker Single-Node).
-- [x] Konfiguracja statycznej adresacji IP i autostartu usług.
-- [x] Wdrożenie pierwszego agenta na systemie Windows (Endpoint Monitoring).
-- [ ] Implementacja File Integrity Monitoring (FIM).
-- [ ] Integracja TheHive z Wazuh przez Shuffle/n8n.
+### Kluczowe osiągnięcia:
+- **Wykrywanie Real-time:** Natychmiastowe alerty o dodaniu, modyfikacji lub usunięciu plików w monitorowanych ścieżkach (np. `C:\SOC_Test`).
+- **Analiza Whodata:** Dzięki integracji z audytem systemu Windows, system raportuje **kto** dokonał zmiany (użytkownik) oraz **jakim procesem** (np. `notepad.exe`, `powershell.exe`).
 
-🛡️ Capabilities:
-- **Endpoint Monitoring:** Zbieranie logów z systemów Windows przez agentów Wazuh.
-- **Persistence:** Automatyczne wznawianie usług po restarcie hosta (Docker + Systemd).
-- **Network Privacy:** Izolacja usług monitorujących od głównego segmentu sieci.
+---
 
-🧠 Key Learnings & Challenges Overcome
-Podczas budowy laboratorium napotkałem kilka krytycznych wyzwań, których rozwiązanie pozwoliło mi na głębsze zrozumienie architektury sieciowej i bezpieczeństwa:
-
-Network Infrastructure Shift: Pierwotna konfiguracja opierała się na podwójnym NAT (router dostawcy + własny router). Wyzwaniem była poprawna adresacja maszyn wirtualnych. Problem rozwiązany poprzez przełączenie routera brzegowego w Bridge Mode i rekonfigurację podsieci na 192.168.88.x, co umożliwiło uzyskanie pełnej kontroli nad ruchem i statyczną adresacją usług.
-
-Wazuh Credentials & Docker Persistence: Napotkałem trudności z synchronizacją haseł między indexerem a dashboardem po zmianie adresacji IP. Rozwiązaniem było wdrożenie plików .env oraz ręczna modyfikacja docker-compose.yml, co wymusiło poprawne wczytanie poświadczeń przy jednoczesnym zachowaniu trwałości wolumenów (Docker Volumes).
-
-Service Reliability (Systemd Integration): Aby zapewnić wysoką dostępność (High Availability) usług SOC po restarcie fizycznego hosta, opracowałem i wdrożyłem własne jednostki systemd (Unit Files). Dzięki temu stack kontenerowy startuje automatycznie w odpowiedniej kolejności, uwzględniając zależności sieciowe.
-
-Endpoint Security Enforcement: Pierwsze próby wdrożenia agenta kończyły się błędami uprawnień (Access Denied). Nauczką była konieczność egzekwowania pełnych uprawnień administracyjnych w PowerShell oraz weryfikacja polityk zapory systemowej pod kątem komunikacji z Managerem.
-
-## Etap 2: Monitorowanie Integralności Plików (FIM) & Whodata
-
-Kolejnym krokiem było wdrożenie modułu **FIM**, który pozwala na natychmiastowe wykrywanie nieautoryzowanych zmian w kluczowych katalogach systemu Windows.
-
-### Kluczowe funkcjonalności:
-- **Real-time Monitoring:** System wykrywa dodanie, modyfikację lub usunięcie pliku w ciągu kilku sekund od zdarzenia.
-- **Analiza Whodata:** Dzięki integracji z systemowym audytem Windows, Wazuh raportuje nie tylko **co** się zmieniło, ale także **kto** (użytkownik) i **jakim programem** (proces) dokonał zmiany.
-
-### Scenariusz testowy:
-1. Skonfigurowano monitorowanie katalogu `C:\SOC_Test` za pomocą konfiguracji grupowej (`agent.conf`).
-2. Przeprowadzono symulację ataku polegającą na stworzeniu i edycji pliku `hasla.txt`.
-3. System poprawnie wygenerował alerty poziomu 7 (File added/modified), wzbogacone o dane kryminalistyczne (nazwa użytkownika i nazwa procesu).
-
-> **Konfiguracja:**
-> `<directories check_all="yes" report_changes="yes" whodata="yes">C:\SOC_Test</directories>`
->
-> ## Etap 3: Vulnerability Management (Zarządzanie Podatnościami)
-
-Uruchomiłem moduł **Vulnerability Detector**, który integruje agenta z bazami danych CVE (NVD, MSU).
+## 🔍 Etap 2: Zarządzanie Podatnościami (Vulnerability Management)
+Uruchomiono moduł skanowania podatności w oparciu o bazy danych CVE (NVD, MSU).
 
 ### Analiza wyników:
-- System zidentyfikował **32 krytyczne luki** w zabezpieczeniach hosta Windows.
-- Wykryto m.in. podatności typu RCE (Remote Code Execution), które stanowią bezpośrednie zagrożenie dla infrastruktury.
-- **Wniosek:** Moduł ten pozwala na priorytetyzację instalacji poprawek bezpieczeństwa (Patch Management) w oparciu o realne zagrożenia.
+- **Identyfikacja zagrożeń:** Wstępne skanowanie wykazało 32 podatności krytyczne (Critical) oraz 579 wysokich (High) na testowym hoście Windows.
+- **Wniosek:** Większość luk wynikała z brakujących poprawek Microsoft Security (CVE-2023-XXXX). System pozwolił na priorytetyzację procesu Patch Managementu.
 
-- ## Etap 4: Active Response (Automatyczna Reakcja)
+---
 
-Wdrożyłem mechanizm aktywnej obrony, który pozwala systemowi na automatyczne reagowanie na wykryte zagrożenia.
+## ⚡ Etap 3: Active Response (Automatyczna Defensywa)
+Najbardziej zaawansowany etap laba – konfiguracja systemu do aktywnej obrony przed intruzami.
 
-### Konfiguracja:
-- **Mechanizm:** Integracja z Windows Firewall (`netsh.exe`).
-- **Logika:** Automatyczne blokowanie adresu IP na 180 sekund po wykryciu incydentu o poziomie 6 lub wyższym.
-- **Wynik:** Pomyślnie przetestowano scenariusz, w którym nieautoryzowane usunięcie pliku w monitorowanym folderze skutkuje natychmiastowym odcięciem dostępu dla hosta generującego zdarzenie (Rule ID 601).
+### Mechanizm działania:
+- **Wyzwalacz (Trigger):** Wykrycie zdarzenia o poziomie krytyczności >= 6 (np. usunięcie pliku systemowego lub Brute Force).
+- **Akcja:** Automatyczne wywołanie skryptu `win-firewall-drop`.
+- **Rezultat:** Agent dynamicznie dodaje regułę do **Windows Defender Firewall** przy użyciu polecenia `netsh`, odcinając adres IP napastnika na 180 sekund.
+
+---
+
+## 📸 Dowody Koncepcyjne (PoC)
+
+### Wykrywanie zmian (FIM)
+System poprawnie zidentyfikował użytkownika i program modyfikujący pliki:
+![Wykrywanie zmian](https://raw.githubusercontent.com/greeygoosee/soc-lab/main/Zrzut%20ekranu%20(21).jpg)
+
+### Wykryte Podatności
+Brutalna prawda o stanie zabezpieczeń endpointa:
+![Podatności](https://raw.githubusercontent.com/greeygoosee/soc-lab/main/Zrzut%20ekranu%20(25)_2.jpg)
+
+### Skuteczna Blokada (Active Response)
+Potwierdzenie automatycznego bana (Rule ID 601) po wykryciu incydentu:
+![Active Response](https://raw.githubusercontent.com/greeygoosee/soc-lab/main/Zrzut%20ekranu%20(27)_2.jpg)
+
+---
+
+## 🚀 Wnioski
+Projekt udowadnia skuteczność systemów EDR w automatyzacji bezpieczeństwa. Dzięki integracji wielu modułów, czas reakcji na incydent (MTTR) został skrócony z minut do sekund poprzez eliminację czynnika ludzkiego w pierwszej linii obrony.
