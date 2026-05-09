@@ -70,3 +70,12 @@ Uruchomiłem moduł **Vulnerability Detector**, który integruje agenta z bazami
 - System zidentyfikował **32 krytyczne luki** w zabezpieczeniach hosta Windows.
 - Wykryto m.in. podatności typu RCE (Remote Code Execution), które stanowią bezpośrednie zagrożenie dla infrastruktury.
 - **Wniosek:** Moduł ten pozwala na priorytetyzację instalacji poprawek bezpieczeństwa (Patch Management) w oparciu o realne zagrożenia.
+
+- ## Etap 4: Active Response (Automatyczna Reakcja)
+
+Wdrożyłem mechanizm aktywnej obrony, który pozwala systemowi na automatyczne reagowanie na wykryte zagrożenia.
+
+### Konfiguracja:
+- **Mechanizm:** Integracja z Windows Firewall (`netsh.exe`).
+- **Logika:** Automatyczne blokowanie adresu IP na 180 sekund po wykryciu incydentu o poziomie 6 lub wyższym.
+- **Wynik:** Pomyślnie przetestowano scenariusz, w którym nieautoryzowane usunięcie pliku w monitorowanym folderze skutkuje natychmiastowym odcięciem dostępu dla hosta generującego zdarzenie (Rule ID 601).
