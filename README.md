@@ -45,3 +45,19 @@ Wazuh Credentials & Docker Persistence: Napotkałem trudności z synchronizacją
 Service Reliability (Systemd Integration): Aby zapewnić wysoką dostępność (High Availability) usług SOC po restarcie fizycznego hosta, opracowałem i wdrożyłem własne jednostki systemd (Unit Files). Dzięki temu stack kontenerowy startuje automatycznie w odpowiedniej kolejności, uwzględniając zależności sieciowe.
 
 Endpoint Security Enforcement: Pierwsze próby wdrożenia agenta kończyły się błędami uprawnień (Access Denied). Nauczką była konieczność egzekwowania pełnych uprawnień administracyjnych w PowerShell oraz weryfikacja polityk zapory systemowej pod kątem komunikacji z Managerem.
+
+## Etap 2: Monitorowanie Integralności Plików (FIM) & Whodata
+
+Kolejnym krokiem było wdrożenie modułu **FIM**, który pozwala na natychmiastowe wykrywanie nieautoryzowanych zmian w kluczowych katalogach systemu Windows.
+
+### Kluczowe funkcjonalności:
+- **Real-time Monitoring:** System wykrywa dodanie, modyfikację lub usunięcie pliku w ciągu kilku sekund od zdarzenia.
+- **Analiza Whodata:** Dzięki integracji z systemowym audytem Windows, Wazuh raportuje nie tylko **co** się zmieniło, ale także **kto** (użytkownik) i **jakim programem** (proces) dokonał zmiany.
+
+### Scenariusz testowy:
+1. Skonfigurowano monitorowanie katalogu `C:\SOC_Test` za pomocą konfiguracji grupowej (`agent.conf`).
+2. Przeprowadzono symulację ataku polegającą na stworzeniu i edycji pliku `hasla.txt`.
+3. System poprawnie wygenerował alerty poziomu 7 (File added/modified), wzbogacone o dane kryminalistyczne (nazwa użytkownika i nazwa procesu).
+
+> **Konfiguracja:**
+> `<directories check_all="yes" report_changes="yes" whodata="yes">C:\SOC_Test</directories>`
