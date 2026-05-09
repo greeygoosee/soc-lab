@@ -61,3 +61,12 @@ Kolejnym krokiem było wdrożenie modułu **FIM**, który pozwala na natychmiast
 
 > **Konfiguracja:**
 > `<directories check_all="yes" report_changes="yes" whodata="yes">C:\SOC_Test</directories>`
+>
+> ## Etap 3: Vulnerability Management (Zarządzanie Podatnościami)
+
+Uruchomiłem moduł **Vulnerability Detector**, który integruje agenta z bazami danych CVE (NVD, MSU).
+
+### Analiza wyników:
+- System zidentyfikował **32 krytyczne luki** w zabezpieczeniach hosta Windows.
+- Wykryto m.in. podatności typu RCE (Remote Code Execution), które stanowią bezpośrednie zagrożenie dla infrastruktury.
+- **Wniosek:** Moduł ten pozwala na priorytetyzację instalacji poprawek bezpieczeństwa (Patch Management) w oparciu o realne zagrożenia.
